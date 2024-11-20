@@ -16,6 +16,21 @@ nonce_list = set()
 baby_state = 0
 set_volume(100)
 
+def extract_challenge(message, key) :
+    """
+    recupere le challenge si on recoit un message de connexion
+    pre : message est le message recu non decripte
+    post : retourne le challenge contenu dans le message
+    """
+    try :
+        if message :
+            f_message = receive_packet(message, key)
+            if f_message[type] == '0x01' :
+                return f_message[value].split(':')[1]
+    except :
+        return ''
+        
+
 def hashing(string):
 	"""
 	Hachage d'une chaîne de caractères fournie en paramètre.
@@ -125,6 +140,9 @@ def calculate_challenge_response(challenge):
     :param (str) challenge:            Challenge reçu
 	:return (srt)challenge_response:   Réponse au challenge
     """
+    random.seed(challenge)
+    new_challenge = random.random()
+    return hashing(new_challenge)
 
 #Respond to a connexion request by sending the hash value of the number received
 def respond_to_connexion_request(key):
@@ -135,5 +153,13 @@ def respond_to_connexion_request(key):
     :param (str) key:                   Clé de chiffrement
 	:return (srt) challenge_response:   Réponse au challenge
     """
+    global message
+    try :
+        challenge = extract_challenge(message, key)
+        return calculate_challenge_response(challenge)
+    except :
+        return ''
+    
+    
 
 def main():
